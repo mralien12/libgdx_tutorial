@@ -5,91 +5,53 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.math.Vector2;
 
-public class HelloWorld implements ApplicationListener {
+public class HelloWorld implements ApplicationListener, GestureDetector.GestureListener {
 
+	private OrthographicCamera camera;
 	private SpriteBatch batch;
-	private BitmapFont font;
-	private String message = "Do something  already!";
-	private float highestY = 0.0f;
+	private Texture texture;
+	private Sprite sprite;
 
 	@Override
 	public void create () {
+		camera = new OrthographicCamera(1280, 720);
 		batch = new SpriteBatch();
-		font = new BitmapFont(Gdx.files.internal("data/arial-32.fnt"), false);
-		font.setColor(Color.RED);
+		texture = new Texture(Gdx.files.internal("data/Toronto2048wide.jpg"));
+		texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+		sprite = new Sprite(texture);
+		sprite.setOrigin(0,0);
+		sprite.setPosition(-sprite.getWidth()/2,-sprite.getHeight()/2);
+		Gdx.input.setInputProcessor(new GestureDetector(this));
 
 	}
 
 	@Override
 	public void dispose () {
 		batch.dispose();
-		font.dispose();
+		texture.dispose();
 	}
 
 	@Override
 	public void render () {
-		int w = Gdx.graphics.getWidth();
-		int h = Gdx.graphics.getHeight();
-		Gdx.gl.glClearColor(1,1,1,1);
+		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-
-		int deviceAngle = Gdx.input.getRotation();
-		Input.Orientation orientation  = Gdx.input.getNativeOrientation();
-		float accelY = Gdx.input.getAccelerometerY();
-		if (accelY > highestY) {
-			highestY = accelY;
-		}
-
-		message = "Device rotated to: " + Integer.toString(deviceAngle) + "degrees\n";
-		message += "Device orientation is ";
-		switch (orientation) {
-			case Landscape:
-				message += " landscape\n";
-				break;
-			case Portrait:
-				message += " portrait. \n";
-				break;
-			default:
-				message += " complete crap!\n";
-		}
-
-		message += "Device Resolution: " + Integer.toString(w) + "," + Integer.toString(h) + "\n";
-		message += "Y axis accel: " + Float.toString(accelY) + " \n";
-		message += "Highest Y value: " + Float.toString(highestY) + " \n";
-
-		if (Gdx.input.isPeripheralAvailable(Input.Peripheral.Vibrator)) {
-			if (accelY > 7) {
-				Gdx.input.vibrate(100);
-			}
-		}
-
-		if(Gdx.input.isPeripheralAvailable(Input.Peripheral.Compass)){
-			message += "Azmuth:" + Float.toString(Gdx.input.getAzimuth()) + "\n";
-			message += "Pitch:" + Float.toString(Gdx.input.getPitch()) + "\n";
-			message += "Roll:" + Float.toString(Gdx.input.getRoll()) + "\n";
-		}
-		else{
-			message += "No compass available\n";
-		}
-
-		GlyphLayout glyphLayout = new GlyphLayout(font, message);
-		font.draw(batch, glyphLayout, 0, h);
-
+		sprite.draw(batch);
 		batch.end();
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		batch.dispose();
-		batch = new SpriteBatch();
-		String resolution = Integer.toString(width) + "," + Integer.toString(height);
-		Gdx.app.log("MJF", "Resolution changed " + resolution);
 	}
 
 	@Override
@@ -99,6 +61,53 @@ public class HelloWorld implements ApplicationListener {
 
 	@Override
 	public void resume() {
+
+	}
+
+	@Override
+	public boolean touchDown(float x, float y, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean tap(float x, float y, int count, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean longPress(float x, float y) {
+		return false;
+	}
+
+	@Override
+	public boolean fling(float velocityX, float velocityY, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean pan(float x, float y, float deltaX, float deltaY) {
+		camera.translate(deltaX,0);
+		camera.update();
+		return false;
+	}
+
+	@Override
+	public boolean panStop(float x, float y, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean zoom(float initialDistance, float distance) {
+		return false;
+	}
+
+	@Override
+	public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
+		return false;
+	}
+
+	@Override
+	public void pinchStop() {
 
 	}
 }
