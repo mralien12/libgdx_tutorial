@@ -2,105 +2,94 @@ package com.alticast;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.input.GestureDetector;
-import com.badlogic.gdx.math.Vector2;
 
-public class HelloWorld implements ApplicationListener, GestureDetector.GestureListener {
+public class HelloWorld implements ApplicationListener {
 
 	private SpriteBatch batch;
 	private BitmapFont font;
-	private String message = "Touch something already";
-	private int w, h;
-
-	@Override
-	public boolean touchDown(float x, float y, int pointer, int button) {
-		return false;
-	}
-
-	@Override
-	public boolean tap(float x, float y, int count, int button) {
-		message = "Tap performed, finger" + Integer.toString(button);
-		return true;
-	}
-
-	@Override
-	public boolean longPress(float x, float y) {
-		message = "Long press performed";
-		return true;
-	}
-
-	@Override
-	public boolean fling(float velocityX, float velocityY, int button) {
-		message = "Fling performed, velocity:" + Float.toString(velocityX) +
-				"," + Float.toString(velocityY);
-		return true;
-	}
-
-	@Override
-	public boolean pan(float x, float y, float deltaX, float deltaY) {
-		message = "Pan performed, delta:" + Float.toString(deltaX) +
-				"," + Float.toString(deltaY);
-		return true;
-	}
-
-	@Override
-	public boolean panStop(float x, float y, int pointer, int button) {
-		return false;
-	}
-
-	@Override
-	public boolean zoom(float initialDistance, float distance) {
-		message = "Zoom performed, initial Distance:" + Float.toString(initialDistance) +
-				" Distance: " + Float.toString(distance);
-		return true;
-	}
-
-	@Override
-	public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
-		message = "Pinch performed";
-		return true;
-	}
-
-	@Override
-	public void pinchStop() {
-
-	}
+	private String message = "Do something  already!";
+	private float highestY = 0.0f;
 
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 		font = new BitmapFont(Gdx.files.internal("data/arial-32.fnt"), false);
 		font.setColor(Color.RED);
-		w = Gdx.graphics.getWidth();
-		h = Gdx.graphics.getHeight();
 
-		GestureDetector gestureDetector = new GestureDetector(this);
-		Gdx.input.setInputProcessor(gestureDetector);
 	}
 
 	@Override
-	public void resize(int width, int height) {
-
+	public void dispose () {
+		batch.dispose();
+		font.dispose();
 	}
 
 	@Override
 	public void render () {
+		int w = Gdx.graphics.getWidth();
+		int h = Gdx.graphics.getHeight();
 		Gdx.gl.glClearColor(1,1,1,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		batch.begin();
 
+		int deviceAngle = Gdx.input.getRotation();
+		Input.Orientation orientation  = Gdx.input.getNativeOrientation();
+		float accelY = Gdx.input.getAccelerometerY();
+		if (accelY > highestY) {
+			highestY = accelY;
+		}
+
+		message = "Device rotated to: " + Integer.toString(deviceAngle) + "degrees\n";
+		message += "Device orientation is ";
+		switch (orientation) {
+			case Landscape:
+				message += " landscape\n";
+				break;
+			case Portrait:
+				message += " portrait. \n";
+				break;
+			default:
+				message += " complete crap!\n";
+		}
+
+		message += "Device Resolution: " + Integer.toString(w) + "," + Integer.toString(h) + "\n";
+		message += "Y axis accel: " + Float.toString(accelY) + " \n";
+		message += "Highest Y value: " + Float.toString(highestY) + " \n";
+
+		if (Gdx.input.isPeripheralAvailable(Input.Peripheral.Vibrator)) {
+			if (accelY > 7) {
+				Gdx.input.vibrate(100);
+			}
+		}
+
+		if(Gdx.input.isPeripheralAvailable(Input.Peripheral.Compass)){
+			message += "Azmuth:" + Float.toString(Gdx.input.getAzimuth()) + "\n";
+			message += "Pitch:" + Float.toString(Gdx.input.getPitch()) + "\n";
+			message += "Roll:" + Float.toString(Gdx.input.getRoll()) + "\n";
+		}
+		else{
+			message += "No compass available\n";
+		}
+
 		GlyphLayout glyphLayout = new GlyphLayout(font, message);
-		float x = w/2 - glyphLayout.width / 2;
-		float y = h/2 + glyphLayout.height / 2;
-		font.draw(batch, glyphLayout, x, y);
+		font.draw(batch, glyphLayout, 0, h);
 
 		batch.end();
+	}
+
+	@Override
+	public void resize(int width, int height) {
+		batch.dispose();
+		batch = new SpriteBatch();
+		String resolution = Integer.toString(width) + "," + Integer.toString(height);
+		Gdx.app.log("MJF", "Resolution changed " + resolution);
 	}
 
 	@Override
@@ -110,12 +99,6 @@ public class HelloWorld implements ApplicationListener, GestureDetector.GestureL
 
 	@Override
 	public void resume() {
-		batch.dispose();
-		font.dispose();
-	}
-
-	@Override
-	public void dispose () {
 
 	}
 }
