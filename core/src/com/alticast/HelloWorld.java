@@ -12,10 +12,12 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -30,57 +32,37 @@ import java.util.Iterator;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 public class HelloWorld implements ApplicationListener {
-
-	public class MyActor  extends Actor {
-		Texture texture = new Texture(Gdx.files.internal("data/jet.png"));
-		public boolean started = false;
-
-		public MyActor() {
-			setBounds(getX(), getY(), texture.getWidth(), texture.getHeight());
-		}
-
-		@Override
-		public void draw(Batch batch, float parentAlpha) {
-			batch.draw(texture,this.getX(),getY(),this.getOriginX(),this.getOriginY(),this.getWidth(),
-					this.getHeight(),this.getScaleX(), this.getScaleY(),this.getRotation(),0,0,
-					texture.getWidth(),texture.getHeight(),false,false);
-		}
-
-		@Override
-		public void act(float delta){
-			for(Iterator<Action> iter = this.getActions().iterator(); iter.hasNext();){
-				iter.next().act(delta);
-			}
-		}
-	}
-
 	private Stage stage;
+	private Group group;
+
 	@Override
 	public void create () {
 		stage = new Stage();
-		Gdx.input.setInputProcessor(stage);
+		final TextureRegion jetTexture  = new TextureRegion(new Texture("data/jet.png"));
+		final TextureRegion flameTexture = new TextureRegion(new Texture("data/flame.png"));
 
-		MyActor myActor = new MyActor();
-//		SequenceAction sequenceAction = new SequenceAction();
-//
-//		MoveToAction moveAction = new MoveToAction();
-//		RotateToAction rotateAction = new RotateToAction();
-//		ScaleToAction scaleAction = new ScaleToAction();
-//
-//		moveAction.setPosition(300f, 0f);
-//		moveAction.setDuration(5f);
-//		rotateAction.setRotation(90f);
-//		rotateAction.setDuration(5f);
-//		scaleAction.setScale(0.5f);
-//		scaleAction.setDuration(5f);
-//
-//		sequenceAction.addAction(scaleAction);
-//		sequenceAction.addAction(rotateAction);
-//		sequenceAction.addAction(moveAction);
+		final Actor jet = new Actor() {
+			public void draw(Batch batch, float alpha) {
+				batch.draw(jetTexture, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(),
+						getScaleX(), getScaleY(), getRotation());
+			}
+		};
+		jet.setBounds(jet.getX(), jet.getY(), jetTexture.getRegionWidth(), jetTexture.getRegionHeight());
 
-//		myActor.addAction(sequence(scaleTo(0.5f,0.5f,5f),rotateTo(90.0f,5f),moveTo(300.0f,0f,5f)));
-		myActor.addAction(parallel(scaleTo(0.5f,0.5f,5f),rotateTo(90.0f,5f),moveTo(300.0f,0f,5f)));
-		stage.addActor(myActor);
+		final Actor flame = new Actor(){
+			public void draw(Batch batch, float alpha){
+				batch.draw(flameTexture, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(),
+						getScaleX(), getScaleY(), getRotation());
+			}
+		};
+		flame.setBounds(0, 0, flameTexture.getRegionWidth(), flameTexture.getRegionHeight());
+		flame.setPosition(jet.getWidth()-30, 75);
+
+		group = new Group();
+		group.addActor(jet);
+		group.addActor(flame);
+		group.addAction(parallel(moveTo(200, 0, 5), rotateBy(90, 5)));
+		stage.addActor(group);
 	}
 
 	@Override
