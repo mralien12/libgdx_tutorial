@@ -28,41 +28,83 @@ import com.badlogic.gdx.scenes.scene2d.actions.ScaleToAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 
 import java.util.Iterator;
+import java.util.Random;
+
+import javax.xml.soap.Text;
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 public class HelloWorld implements ApplicationListener {
+
+	class Jet extends Actor {
+		private TextureRegion _texture;
+
+		public Jet(TextureRegion texture) {
+			_texture = texture;
+			setBounds(getX(), getY(), _texture.getRegionWidth(), _texture.getRegionHeight());
+
+			this.addListener(new InputListener(){
+				@Override
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+					System.out.println("Touched " + getName());
+					setVisible(false);
+					return true;
+				}
+			});
+		}
+
+		// Implement the full form of draw() so we can handle rotation and scaling.
+		public void draw(Batch batch, float alpha){
+			batch.draw(_texture, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(),
+					getScaleX(), getScaleY(), getRotation());
+		}
+
+		public Actor hit(float  x, float y, boolean touchable) {
+			if (!this.isVisible() || this.getTouchable() == Touchable.disabled) {
+				return null;
+			}
+
+			float centerX = getWidth()/2;
+			float centerY = getHeight()/2;
+
+			float radius  = (float) Math.sqrt(centerX  * centerX + centerY*centerY);
+			float distance = (float) Math.sqrt((centerX - x)*(centerX-x) + (centerY-y)*(centerY-y));
+			if (distance <= radius)
+				return this;
+
+			return null;
+		}
+	}
+
+	private Jet[] jets;
 	private Stage stage;
-	private Group group;
 
 	@Override
 	public void create () {
 		stage = new Stage();
-		final TextureRegion jetTexture  = new TextureRegion(new Texture("data/jet.png"));
-		final TextureRegion flameTexture = new TextureRegion(new Texture("data/flame.png"));
+		final TextureRegion jetTexture = new TextureRegion(new Texture("data/jet.png"));
 
-		final Actor jet = new Actor() {
-			public void draw(Batch batch, float alpha) {
-				batch.draw(jetTexture, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(),
-						getScaleX(), getScaleY(), getRotation());
-			}
-		};
-		jet.setBounds(jet.getX(), jet.getY(), jetTexture.getRegionWidth(), jetTexture.getRegionHeight());
+		jets = new Jet[10];
 
-		final Actor flame = new Actor(){
-			public void draw(Batch batch, float alpha){
-				batch.draw(flameTexture, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(),
-						getScaleX(), getScaleY(), getRotation());
-			}
-		};
-		flame.setBounds(0, 0, flameTexture.getRegionWidth(), flameTexture.getRegionHeight());
-		flame.setPosition(jet.getWidth()-30, 75);
+		// Create/seed our random number for positioning jets randomly
+		Random random = new Random();
 
-		group = new Group();
-		group.addActor(jet);
-		group.addActor(flame);
-		group.addAction(parallel(moveTo(200, 0, 5), rotateBy(90, 5)));
-		stage.addActor(group);
+		// Create 10 Jet objects at random on screen locations
+		for(int i = 0; i < 10; i++){
+			jets[i] = new Jet(jetTexture);
+
+			//Assign the position of the jet to a random value within the screen boundaries
+			jets[i].setPosition(random.nextInt(Gdx.graphics.getWidth() - (int)jets[i].getWidth())
+					, random.nextInt(Gdx.graphics.getHeight() - (int)jets[i].getHeight()));
+
+			// Set the name of the Jet to it's index within the loop
+			jets[i].setName(Integer.toString(i));
+
+			// Add them to the stage
+			stage.addActor(jets[i]);
+		}
+
+		Gdx.input.setInputProcessor(stage);
 	}
 
 	@Override
